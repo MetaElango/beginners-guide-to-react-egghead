@@ -4,22 +4,30 @@
   <script src="https://unpkg.com/react-dom@16.12.0/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.8.3/babel.js"></script>
   <script type="text/babel">
-    function useLocalStorageState(key, defaultValue = '') {
-      const [state, setState] = React.useState(
-        () => window.localStorage.getItem(key) || defaultValue,
-      )
+    function useLocalStorageState(
+      key,
+      defaultValue = "",
+      // Sometimes you need to save and retrieve a number or JSON
+      // you can provide methods transforming from and to storage string here
+      castToStorage = (val) => val,
+      castFromStorage = (val) => val
+    ) {
+      const [state, setState] = React.useState(() => {
+        const storageValue = window.localStorage.getItem(key) || defaultValue;
+        return castFromStorage(storageValue);
+      });
 
       React.useEffect(() => {
-        window.localStorage.setItem(key, state)
-      }, [key, state])
+        window.localStorage.setItem(key, castToStorage(state));
+      }, [key, state]);
 
-      return [state, setState]
+      return [state, setState];
     }
 
     function Greeting() {
-      const [name, setName] = useLocalStorageState('name')
+      const [name, setName] = useLocalStorageState("name");
 
-      const handleChange = event => setName(event.target.value)
+      const handleChange = (event) => setName(event.target.value);
 
       return (
         <div>
@@ -27,11 +35,41 @@
             <label htmlFor="name">Name: </label>
             <input value={name} onChange={handleChange} id="name" />
           </form>
-          {name ? <strong>Hello {name}</strong> : 'Please type your name'}
+          {name ? <strong>Hello {name}</strong> : "Please type your name"}
         </div>
-      )
+      );
     }
 
-    ReactDOM.render(<Greeting />, document.getElementById('root'))
+    function Counter(props) {
+      const [countValue, setCountValue] = useLocalStorageState(
+        "countValue",
+        0,
+        (countValue) => countValue.toString(),
+        (countStorageValue) => parseInt(countStorageValue, 10)
+      );
+
+      const handleCountBump = (event) => setCountValue(countValue + 1);
+
+      return (
+        <div>
+          <button onClick={handleCountBump} id="name">
+            {props.children}
+          </button>
+          <p>Count is {countValue}</p>
+        </div>
+      );
+    }
+
+    var siema = "dsa";
+
+    ReactDOM.render(
+      <>
+        <h2 className={siema}>Name saving</h2>
+        <Greeting className="aaaa" />
+        <h2>Count saving</h2>
+        <Counter>Click to bump the count</Counter>
+      </>,
+      document.getElementById("root")
+    );
   </script>
 </body>
